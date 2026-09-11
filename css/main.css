@@ -1,0 +1,200 @@
+/**
+ * MUSHAK – BAPPA'S FESTIVAL QUEST
+ * Main CSS: Design System, Tokens, Typography & Base Styles
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --color-cream: #FFFDF6;
+  --color-cream-dark: #F5EFE0;
+  --color-dark-bg: #140D0C;
+  --color-charcoal: #211615;
+  --color-maroon: #6A040F;
+  --color-festival-red: #D62828;
+  --color-saffron: #F77F00;
+  --color-orange-vibrant: #E85D04;
+  --color-gold: #FFB703;
+  --color-haldi: #FFD166;
+  --color-leaf-green: #2D6A4F;
+  --color-accent-green: #40916C;
+  --color-peacock-blue: #0077B6;
+  --color-white: #FFFFFF;
+  --color-muted: #A89F91;
+
+  --font-royal: 'Cinzel', serif;
+  --font-body: 'Outfit', sans-serif;
+
+  --shadow-gold: 0 0 20px rgba(255, 183, 3, 0.45);
+  --shadow-red: 0 0 20px rgba(214, 40, 40, 0.45);
+  --shadow-card: 0 12px 36px rgba(0, 0, 0, 0.65);
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 9999px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-dark-bg);
+  color: var(--color-cream);
+  font-family: var(--font-body);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* App Viewport Container */
+#game-app {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  max-width: 1280px;
+  max-height: 720px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #110B0A;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+
+#canvas-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+canvas#game-canvas {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* UI Layer (Overlays on top of Canvas) */
+#ui-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* individual screens enable pointer events */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Utility Class */
+.hidden {
+  display: none !important;
+}
+
+/* Buttons */
+.btn {
+  pointer-events: auto;
+  font-family: var(--font-royal);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 14px 32px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(60deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+  transform: rotate(30deg) translateY(-100%);
+  transition: transform 0.6s ease;
+}
+
+.btn:hover::after {
+  transform: rotate(30deg) translateY(100%);
+}
+
+.btn:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--color-festival-red), var(--color-saffron));
+  color: var(--color-white);
+  border: 2px solid var(--color-haldi);
+  box-shadow: var(--shadow-red);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 25px rgba(247, 127, 0, 0.7);
+}
+
+.btn-secondary {
+  background: rgba(43, 23, 21, 0.85);
+  color: var(--color-haldi);
+  border: 1.5px solid rgba(255, 209, 102, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.btn-secondary:hover {
+  background: rgba(66, 30, 27, 0.95);
+  border-color: var(--color-haldi);
+}
+
+.btn-gold {
+  background: linear-gradient(135deg, var(--color-gold), var(--color-saffron));
+  color: #211108;
+  border: 2px solid #FFF8DC;
+  box-shadow: var(--shadow-gold);
+}
+
+.btn-pulse {
+  animation: pulseButton 1.6s infinite alternate ease-in-out;
+}
+
+@keyframes pulseButton {
+  0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 183, 3, 0.4); }
+  100% { transform: scale(1.06); box-shadow: 0 0 30px rgba(255, 183, 3, 0.9); }
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: rgba(26, 15, 14, 0.88);
+  border: 1.5px solid rgba(255, 209, 102, 0.4);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-card);
+}

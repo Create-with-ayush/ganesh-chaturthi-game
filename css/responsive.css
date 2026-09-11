@@ -1,0 +1,184 @@
+/**
+ * MUSHAK – BAPPA'S FESTIVAL QUEST
+ * Responsive CSS: Mobile, Tablet & Desktop Adaptations
+ * Breakpoints: 320px, 375px, 425px, 768px, 1024px, 1440px+
+ */
+
+/* Tablets & Small Laptops (<= 1024px) */
+@media (max-width: 1024px) {
+  .logo-title-main {
+    font-size: 3.2rem;
+  }
+  .map-nodes-container {
+    max-width: 720px;
+    gap: 14px;
+  }
+  .map-node {
+    width: 140px;
+    padding: 14px;
+  }
+}
+
+/* Tablets (<= 768px) */
+@media (max-width: 768px) {
+  .logo-title-main {
+    font-size: 2.6rem;
+    letter-spacing: 2px;
+  }
+  .logo-title-sub {
+    font-size: 1.3rem;
+  }
+  .tagline {
+    font-size: 0.95rem;
+    margin-bottom: 20px;
+  }
+  .btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+  }
+  .map-nodes-container {
+    gap: 10px;
+  }
+  .map-node {
+    width: 130px;
+    padding: 10px;
+  }
+  .node-icon {
+    font-size: 2rem;
+  }
+  .node-title {
+    font-size: 0.85rem;
+  }
+  .modal-content {
+    padding: 24px 20px;
+  }
+  .results-card {
+    padding: 24px 20px;
+  }
+  .results-title {
+    font-size: 1.8rem;
+  }
+  .results-score-box {
+    padding: 10px 14px;
+  }
+  .res-col-val {
+    font-size: 1.2rem;
+  }
+}
+
+/* Large Mobile Screens (<= 480px) */
+@media (max-width: 480px) {
+  #ui-overlay {
+    padding: 8px;
+  }
+  .screen {
+    padding: 12px;
+  }
+  .logo-title-main {
+    font-size: 2.2rem;
+  }
+  .logo-title-sub {
+    font-size: 1.1rem;
+  }
+  .festival-badge {
+    font-size: 0.75rem;
+    padding: 4px 12px;
+  }
+  .menu-buttons {
+    max-width: 260px;
+    gap: 10px;
+  }
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+  }
+  .map-nodes-container {
+    max-width: 320px;
+    gap: 8px;
+  }
+  .map-node {
+    width: 95px;
+    padding: 8px 4px;
+  }
+  .node-icon {
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  .node-title {
+    font-size: 0.75rem;
+  }
+  .node-score {
+    font-size: 0.7rem;
+  }
+  .hud-level-badge {
+    font-size: 0.85rem;
+  }
+  .hud-score-val {
+    font-size: 1.1rem;
+  }
+  .hud-timer-container {
+    font-size: 1.05rem;
+    min-width: 45px;
+  }
+  .touch-btn {
+    width: 54px;
+    height: 54px;
+    font-size: 1.3rem;
+  }
+  .touch-btn-jump {
+    width: 60px;
+    height: 60px;
+    font-size: 0.85rem;
+  }
+  #dhol-touch-pads {
+    gap: 8px;
+  }
+  .dhol-pad-btn {
+    width: 62px;
+    height: 62px;
+  }
+  .dhol-pad-btn span.bol-name {
+    font-size: 1rem;
+  }
+  .save-score-form {
+    flex-direction: column;
+    align-items: center;
+  }
+  .input-name {
+    width: 100%;
+    max-width: 220px;
+  }
+  .results-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+/* Smallest Mobile Breakpoints (320px - 360px) */
+@media (max-width: 360px) {
+  .logo-title-main {
+    font-size: 1.9rem;
+  }
+  .logo-title-sub {
+    font-size: 0.95rem;
+  }
+  .map-node {
+    width: 85px;
+  }
+  .story-card {
+    padding: 16px 14px;
+  }
+  .story-title {
+    font-size: 1.4rem;
+  }
+  .story-text {
+    font-size: 0.95rem;
+  }
+}
+
+/* Large 4K / Desktop Screens (>= 1440px) */
+@media (min-width: 1440px) {
+  #game-app {
+    box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+  }
+}
