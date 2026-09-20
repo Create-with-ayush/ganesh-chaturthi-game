@@ -60,10 +60,19 @@ class StorageManager {
     }
   }
 
+  // Get save key scoped to current player if auth is available
+  _getPlayerSaveKey() {
+    if (window.game && window.game.auth && window.game.auth.currentPlayer) {
+      return this.STORAGE_KEY + "_" + window.game.auth.currentPlayer.name;
+    }
+    return this.STORAGE_KEY;
+  }
+
   getSaveData() {
+    const key = this._getPlayerSaveKey();
     if (this.isStorageAvailable) {
       try {
-        const raw = localStorage.getItem(this.STORAGE_KEY);
+        const raw = localStorage.getItem(key);
         if (raw) {
           return { ...this.defaultData, ...JSON.parse(raw) };
         }
@@ -71,14 +80,15 @@ class StorageManager {
         console.error("Error reading save data:", e);
       }
     }
-    return this.memoryData;
+    return JSON.parse(JSON.stringify(this.defaultData));
   }
 
   saveData(data) {
+    const key = this._getPlayerSaveKey();
     this.memoryData = { ...this.memoryData, ...data };
     if (this.isStorageAvailable) {
       try {
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.memoryData));
+        localStorage.setItem(key, JSON.stringify(this.memoryData));
       } catch (e) {
         console.error("Error saving data:", e);
       }
@@ -127,7 +137,58 @@ class StorageManager {
     save.bestOverallCombo = bestCombo;
 
     this.saveData(save);
+
+    // Update auth player stats & auto-save to leaderboard
+    if (window.game && window.game.auth && window.game.auth.currentPlayer) {
+      window.game.auth.updatePlayerStats(totalScore, totalStars, bestCombo);
+      this._autoSaveToLeaderboard(totalScore, totalStars, bestCombo);
+    }
+
     return save;
+  }
+
+  _autoSaveToLeaderboard(totalScore, totalStars, bestCombo) {
+    if (!window.game || !window.game.auth || !window.game.auth.currentPlayer) return;
+    
+    const player = window.game.auth.currentPlayer;
+    const list = this.getLeaderboard();
+    
+    // Remove any existing entry for this player to update it
+    const filtered = list.filter(e => e.name !== player.name);
+    
+    // Determine rank title
+    let rankTitle = "KEEP PLAYING!";
+    if (CONFIG && CONFIG.RANKS) {
+      for (const r of CONFIG.RANKS) {
+        if (totalScore >= r.minScore) {
+          rankTitle = r.title;
+          break;
+        }
+      }
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    filtered.push({
+      name: player.name,
+      avatar: player.avatar || "🐭",
+      score: totalScore,
+      stars: totalStars,
+      combo: bestCombo,
+      rank: rankTitle,
+      date: today
+    });
+
+    filtered.sort((a, b) => b.score - a.score);
+    const topEntries = filtered.slice(0, 20);
+
+    this.memoryLeaderboard = topEntries;
+    if (this.isStorageAvailable) {
+      try {
+        localStorage.setItem(this.LEADERBOARD_KEY, JSON.stringify(topEntries));
+      } catch (e) {
+        console.error("Error saving leaderboard:", e);
+      }
+    }
   }
 
   getLeaderboard() {
@@ -144,7 +205,7 @@ class StorageManager {
     return this.memoryLeaderboard;
   }
 
-  addLeaderboardEntry(name, score, stars, combo) {
+  addLeaderboardEntry(name, score, stars, combo, avatar) {
     const cleanName = (name || "DEVOTEE").trim().toUpperCase().slice(0, 12);
     const list = this.getLeaderboard();
 
@@ -162,6 +223,7 @@ class StorageManager {
     const today = new Date().toISOString().split("T")[0];
     const newEntry = {
       name: cleanName,
+      avatar: avatar || "🐭",
       score: score,
       stars: stars,
       combo: combo,
@@ -172,7 +234,7 @@ class StorageManager {
     list.push(newEntry);
     list.sort((a, b) => b.score - a.score);
 
-    const topEntries = list.slice(0, 10);
+    const topEntries = list.slice(0, 20);
     this.memoryLeaderboard = topEntries;
 
     if (this.isStorageAvailable) {
@@ -184,6 +246,12 @@ class StorageManager {
     }
 
     return topEntries;
+  }
+
+  getPlayerRank(playerName) {
+    const list = this.getLeaderboard();
+    const idx = list.findIndex(e => e.name === (playerName || "").toUpperCase());
+    return idx >= 0 ? idx + 1 : -1;
   }
 
   getEquippedOutfit() {
@@ -219,10 +287,11 @@ class StorageManager {
   }
 
   resetProgress() {
+    const key = this._getPlayerSaveKey();
     this.memoryData = JSON.parse(JSON.stringify(this.defaultData));
     if (this.isStorageAvailable) {
       try {
-        localStorage.removeItem(this.STORAGE_KEY);
+        localStorage.removeItem(key);
       } catch (e) {}
     }
     return this.memoryData;

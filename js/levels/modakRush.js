@@ -2,6 +2,7 @@
  * MUSHAK – BAPPA'S FESTIVAL QUEST
  * Level 1: Modak Rush
  * Fast-paced festive runner/platformer where Mushak gathers modaks and flowers.
+ * COMPETITIVE: Hitting an obstacle = instant game over & full restart!
  */
 
 class ModakRushLevel {
@@ -20,6 +21,7 @@ class ModakRushLevel {
     this.flowersCollected = 0;
 
     this.isOver = false;
+    this.isGameOver = false;
     this.groundY = 460;
 
     // Mushak physics
@@ -53,6 +55,14 @@ class ModakRushLevel {
     this.surgeTimer = 0;
     this.stepGhungrooTimer = 0;
     this.purifiedCount = 0;
+
+    // Game over animation
+    this.gameOverTimer = 0;
+    this.screenShakeTimer = 0;
+    this.screenShakeIntensity = 0;
+
+    // Danger indicator flash
+    this.dangerFlash = 0;
   }
 
   init() {
@@ -69,7 +79,12 @@ class ModakRushLevel {
     this.surgeTimer = 0;
     this.stepGhungrooTimer = 0;
     this.isOver = false;
+    this.isGameOver = false;
     this.cameraX = 0;
+    this.gameOverTimer = 0;
+    this.screenShakeTimer = 0;
+    this.screenShakeIntensity = 0;
+    this.dangerFlash = 0;
 
     this.player.x = 180;
     this.player.y = this.groundY;
@@ -116,21 +131,49 @@ class ModakRushLevel {
 
   _spawnObstacle(forceX = null) {
     const x = forceX !== null ? forceX : this.cameraX + this.width + 120 + Math.random() * 220;
-    const types = ["box", "powder_bowl", "puddle"];
-    const type = types[Math.floor(Math.random() * types.length)];
+    const typeRoll = Math.random();
+    let type, width, height;
+
+    if (typeRoll < 0.25) {
+      type = "fire_cracker";
+      width = 28;
+      height = 32;
+    } else if (typeRoll < 0.45) {
+      type = "water_splash";
+      width = 52;
+      height = 22;
+    } else if (typeRoll < 0.65) {
+      type = "powder_bowl";
+      width = 32;
+      height = 28;
+    } else if (typeRoll < 0.80) {
+      type = "box";
+      width = 32;
+      height = 28;
+    } else {
+      type = "barricade";
+      width = 38;
+      height = 36;
+    }
 
     this.obstacles.push({
       x,
       y: this.groundY + 8,
       type,
       hit: false,
-      width: type === "puddle" ? 44 : 32,
-      height: 28
+      width,
+      height,
+      animPhase: Math.random() * Math.PI * 2
     });
   }
 
   update(dt, input) {
-    if (this.isOver) return;
+    if (this.isOver || this.isGameOver) return;
+
+    // Screen shake decay
+    if (this.screenShakeTimer > 0) {
+      this.screenShakeTimer -= dt;
+    }
 
     // Timer countdown
     this.timeLeft -= dt;
@@ -248,11 +291,16 @@ class ModakRushLevel {
     }
 
     this.obstacleTimer += dt;
-    if (this.obstacleTimer > 2.2) {
+    if (this.obstacleTimer > 1.8) {
       this.obstacleTimer = 0;
-      if (this.obstacles.length < 8) {
+      if (this.obstacles.length < 10) {
         this._spawnObstacle();
       }
+    }
+
+    // Animate obstacle phases
+    for (const obs of this.obstacles) {
+      obs.animPhase += dt * 3;
     }
 
     // Item Collection Collision
@@ -326,7 +374,7 @@ class ModakRushLevel {
     // Clean up passed items
     this.items = this.items.filter(it => !it.collected && it.x > this.cameraX - 100);
 
-    // Obstacle Collision
+    // Obstacle Collision — COMPETITIVE: Hit = Game Over!
     for (const obs of this.obstacles) {
       if (obs.hit) continue;
       const dx = Math.abs(this.player.x - obs.x);
@@ -344,11 +392,9 @@ class ModakRushLevel {
           this.game.particles.addSparkles(obs.x - this.cameraX, obs.y, 14, "#FFD166");
           this.game.particles.addFloatingText("SHUBH! +300", obs.x - this.cameraX, obs.y - 30, "#FFD166", 24, true);
         } else {
-          // Normal stumble
-          this.player.stumbleTimer = 0.55;
-          this.combo = 0; // Combo reset on obstacle stumble
-          this.game.sound.playObstacleHit();
-          this.game.particles.addFloatingText("STUMBLE!", obs.x - this.cameraX, obs.y - 25, "#E85D04", 22);
+          // GAME OVER — Obstacle hit!
+          this.triggerGameOver(obs);
+          return;
         }
       }
     }
@@ -357,9 +403,48 @@ class ModakRushLevel {
     this.obstacles = this.obstacles.filter(ob => ob.x > this.cameraX - 100);
   }
 
+  triggerGameOver(obs) {
+    this.isGameOver = true;
+    this.isOver = true;
+
+    // Screen shake effect
+    this.screenShakeTimer = 0.5;
+    this.screenShakeIntensity = 12;
+
+    // Visual feedback
+    this.game.sound.playObstacleHit();
+    this.game.particles.addFloatingText("💥 CRASH!", obs.x - this.cameraX, obs.y - 40, "#D62828", 28, true);
+    this.game.particles.addSparkles(obs.x - this.cameraX, obs.y, 20, "#D62828");
+
+    // Add canvas-container shake class
+    const container = document.getElementById("canvas-container");
+    if (container) {
+      container.classList.add("screen-shake");
+      setTimeout(() => container.classList.remove("screen-shake"), 500);
+    }
+
+    // Show game over modal after brief delay
+    setTimeout(() => {
+      this.game.showGameOverModal({
+        score: this.score,
+        modaksCollected: this.modaksCollected,
+        maxCombo: this.maxCombo,
+        obstacleType: obs.type,
+        timeElapsed: Math.round((CONFIG.LEVELS[1].duration || 60) - this.timeLeft)
+      });
+    }, 600);
+  }
+
   render() {
     const ctx = this.ctx;
     ctx.save();
+
+    // Apply screen shake offset
+    if (this.screenShakeTimer > 0) {
+      const shakeX = (Math.random() - 0.5) * this.screenShakeIntensity * (this.screenShakeTimer / 0.5);
+      const shakeY = (Math.random() - 0.5) * this.screenShakeIntensity * (this.screenShakeTimer / 0.5);
+      ctx.translate(shakeX, shakeY);
+    }
 
     // 1. Background Sky & Festive street architecture
     const skyGrad = ctx.createLinearGradient(0, 0, 0, this.height);
@@ -448,10 +533,32 @@ class ModakRushLevel {
       this.game.sprites.renderDiya(ctx, dx - diyaOffset, this.groundY + 10, 0.7);
     }
 
-    // 5. Render Obstacles
+    // 5. Render Obstacles with DANGER indicators
     for (const obs of this.obstacles) {
       const screenX = obs.x - this.cameraX;
       if (screenX > -50 && screenX < this.width + 50) {
+        // Danger glow under obstacle (pulsing red)
+        if (!this.isSurgeActive) {
+          const glowIntensity = 0.3 + Math.sin(obs.animPhase) * 0.15;
+          ctx.save();
+          ctx.fillStyle = `rgba(214, 40, 40, ${glowIntensity})`;
+          ctx.beginPath();
+          ctx.ellipse(screenX, obs.y + 12, obs.width * 0.9, 8, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+
+          // Warning triangle above dangerous obstacles
+          if (obs.type === "fire_cracker" || obs.type === "barricade") {
+            const bobY = Math.sin(obs.animPhase * 1.5) * 3;
+            ctx.save();
+            ctx.font = "bold 14px 'Outfit', sans-serif";
+            ctx.fillStyle = `rgba(214, 40, 40, ${0.6 + Math.sin(obs.animPhase * 2) * 0.3})`;
+            ctx.textAlign = "center";
+            ctx.fillText("⚠️", screenX, obs.y - 30 + bobY);
+            ctx.restore();
+          }
+        }
+
         this.game.sprites.renderObstacle(ctx, screenX, obs.y, obs.type, 1.0);
       }
     }
@@ -532,6 +639,40 @@ class ModakRushLevel {
       ctx.fill();
     }
     ctx.restore();
+
+    // 9. Danger Warning HUD indicator (bottom right) when near obstacles
+    if (!this.isSurgeActive) {
+      let nearestDist = Infinity;
+      for (const obs of this.obstacles) {
+        if (obs.hit) continue;
+        const dist = obs.x - this.player.x;
+        if (dist > 0 && dist < 250) {
+          nearestDist = Math.min(nearestDist, dist);
+        }
+      }
+      if (nearestDist < 250) {
+        const urgency = 1 - (nearestDist / 250);
+        ctx.save();
+        ctx.fillStyle = `rgba(214, 40, 40, ${0.15 + urgency * 0.25})`;
+        ctx.beginPath();
+        ctx.roundRect(this.width - 160, this.height - 34, 140, 24, 8);
+        ctx.fill();
+        ctx.strokeStyle = `rgba(214, 40, 40, ${0.4 + urgency * 0.4})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.font = "bold 11px 'Outfit', sans-serif";
+        ctx.fillStyle = `rgba(255, 107, 107, ${0.6 + urgency * 0.4})`;
+        ctx.textAlign = "center";
+        ctx.fillText("⚠️ OBSTACLE AHEAD!", this.width - 90, this.height - 18);
+        ctx.restore();
+      }
+    }
+
+    // Game over red flash overlay
+    if (this.isGameOver) {
+      ctx.fillStyle = "rgba(214, 40, 40, 0.35)";
+      ctx.fillRect(0, 0, this.width, this.height);
+    }
 
     ctx.restore();
   }

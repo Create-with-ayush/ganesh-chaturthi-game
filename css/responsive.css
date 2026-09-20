@@ -182,3 +182,53 @@
     box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
   }
 }
+
+/* Auth Screen Responsive */
+@media (max-width: 480px) {
+  .auth-container {
+    max-width: 100%;
+    padding: 0 4px;
+  }
+  .auth-form-card {
+    padding: 18px 16px;
+  }
+  .auth-input {
+    font-size: 0.95rem;
+    padding: 12px 14px;
+  }
+  .avatar-picker-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 5px;
+    padding: 8px;
+  }
+  .avatar-option {
+    width: 38px;
+    height: 38px;
+    font-size: 1.3rem;
+  }
+  .auth-tabs {
+    max-width: 260px;
+  }
+  .auth-tab {
+    padding: 10px 12px;
+    font-size: 0.82rem;
+  }
+  .player-header-bar {
+    top: 8px;
+    left: 8px;
+    padding: 4px 10px 4px 6px;
+  }
+  .player-header-name {
+    font-size: 0.75rem;
+  }
+  .game-over-title {
+    font-size: 1.8rem;
+  }
+  .game-over-card {
+    padding: 22px 20px;
+  }
+  .lb-rank-summary {
+    padding: 10px 14px;
+    gap: 10px;
+  }
+}

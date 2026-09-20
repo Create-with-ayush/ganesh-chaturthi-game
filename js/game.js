@@ -12,6 +12,9 @@ class FestivalGame {
     this.previousState = null;
     this.isPaused = false;
 
+    // Auth system
+    this.auth = new AuthManager();
+
     // Subsystems
     this.sound = new SoundManager();
     this.storage = new StorageManager();
@@ -65,8 +68,15 @@ class FestivalGame {
       }
     };
 
-    // Start in Main Menu
-    this.returnToMainMenu();
+    // Check for existing auth session
+    if (this.auth.hasSession()) {
+      // User is already logged in, go to main menu
+      this.returnToMainMenu();
+      this.ui.updatePlayerHeader();
+    } else {
+      // Show auth screen
+      this.showAuthScreen();
+    }
 
     // Start Main Game Loop
     this.lastTime = performance.now();
@@ -207,6 +217,20 @@ class FestivalGame {
   // STATE TRANSITIONS
   // ==========================================
 
+  showAuthScreen() {
+    this.state = "AUTH";
+    this.currentLevel = null;
+    this.particles.reset();
+    this.ui.showScreen("auth");
+    this.ui.setMobileControls("none");
+  }
+
+  onAuthComplete() {
+    // Called after successful login/register
+    this.ui.updatePlayerHeader();
+    this.returnToMainMenu();
+  }
+
   returnToMainMenu() {
     this.state = "MAIN_MENU";
     this.currentLevel = null;
@@ -296,6 +320,10 @@ class FestivalGame {
     }
   }
 
+  showGameOverModal(data) {
+    this.ui.showGameOverModal(data);
+  }
+
   startFinalCelebration() {
     this.state = "FINAL_CELEBRATION";
     this.currentLevel = null;
@@ -380,7 +408,7 @@ class FestivalGame {
     } else if (this.state === "FINAL_CELEBRATION") {
       this._renderFinalCelebrationScene(ctx);
     } else {
-      // Menu / Intro / Map background scene
+      // Menu / Intro / Map / Auth background scene
       this._renderMenuBackgroundScene(ctx);
     }
 

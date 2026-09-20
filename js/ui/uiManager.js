@@ -9,6 +9,7 @@ class UIManager {
 
     // Cache DOM Elements
     this.screens = {
+      auth: document.getElementById("screen-auth"),
       menu: document.getElementById("screen-menu"),
       intro: document.getElementById("screen-intro"),
       map: document.getElementById("screen-map"),
@@ -26,7 +27,8 @@ class UIManager {
       pause: document.getElementById("modal-pause"),
       dialogue: document.getElementById("modal-dialogue"),
       wardrobe: document.getElementById("modal-wardrobe"),
-      greetingCard: document.getElementById("modal-greeting-card")
+      greetingCard: document.getElementById("modal-greeting-card"),
+      gameOver: document.getElementById("modal-game-over")
     };
 
     // HUD Elements
@@ -38,6 +40,7 @@ class UIManager {
     this.dholTouchPads = document.getElementById("dhol-touch-pads");
 
     this._setupEventListeners();
+    this._setupAuthUI();
   }
 
   showScreen(screenKey) {
@@ -65,6 +68,13 @@ class UIManager {
       if (musicTrackSelect) {
         musicTrackSelect.value = this.game.storage.getSelectedMusicTrack();
       }
+    }
+
+    // Show/hide player header bar
+    const playerBar = document.getElementById("player-header-bar");
+    if (playerBar) {
+      const showPlayerBar = (screenKey === "menu" || screenKey === "map" || screenKey === "leaderboard" || screenKey === "howToPlay" || screenKey === "settings" || screenKey === "credits") && this.game.auth.hasSession();
+      playerBar.classList.toggle("hidden", !showPlayerBar);
     }
   }
 
@@ -109,6 +119,198 @@ class UIManager {
       this.dholTouchPads.classList.add("hidden");
     }
   }
+
+  // ==========================================
+  // AUTH UI
+  // ==========================================
+
+  _setupAuthUI() {
+    const registerTab = document.getElementById("auth-tab-register");
+    const loginTab = document.getElementById("auth-tab-login");
+    const registerPanel = document.getElementById("auth-register-panel");
+    const loginPanel = document.getElementById("auth-login-panel");
+
+    if (registerTab && loginTab) {
+      registerTab.addEventListener("click", () => {
+        registerTab.classList.add("active");
+        loginTab.classList.remove("active");
+        if (registerPanel) registerPanel.classList.remove("hidden");
+        if (loginPanel) loginPanel.classList.add("hidden");
+      });
+
+      loginTab.addEventListener("click", () => {
+        loginTab.classList.add("active");
+        registerTab.classList.remove("active");
+        if (loginPanel) loginPanel.classList.remove("hidden");
+        if (registerPanel) registerPanel.classList.add("hidden");
+        this._renderPlayersList();
+      });
+    }
+
+    // Avatar picker
+    this._selectedAvatar = "🐭";
+    const avatarGrid = document.getElementById("avatar-picker-grid");
+    if (avatarGrid) {
+      const avatars = this.game.auth.getAvatars();
+      avatars.forEach(avatar => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = `avatar-option ${avatar === this._selectedAvatar ? "selected" : ""}`;
+        btn.textContent = avatar;
+        btn.addEventListener("click", () => {
+          this._selectedAvatar = avatar;
+          document.querySelectorAll(".avatar-option").forEach(b => b.classList.remove("selected"));
+          btn.classList.add("selected");
+          const preview = document.getElementById("selected-avatar-preview");
+          if (preview) preview.textContent = avatar;
+        });
+        avatarGrid.appendChild(btn);
+      });
+    }
+
+    // Register button
+    const registerBtn = document.getElementById("btn-auth-register");
+    if (registerBtn) {
+      registerBtn.addEventListener("click", () => {
+        this.game.sound.ensureContext();
+        const nameInput = document.getElementById("auth-register-name");
+        const name = nameInput ? nameInput.value : "";
+        const result = this.game.auth.register(name, this._selectedAvatar);
+        const statusEl = document.getElementById("auth-register-status");
+        
+        if (statusEl) {
+          statusEl.textContent = result.message;
+          statusEl.className = `auth-status ${result.success ? "success" : "error"}`;
+          statusEl.classList.remove("hidden");
+        }
+
+        if (result.success) {
+          this.game.sound.playButtonClick();
+          setTimeout(() => {
+            this.game.onAuthComplete();
+          }, 600);
+        }
+      });
+    }
+  }
+
+  _renderPlayersList() {
+    const container = document.getElementById("auth-players-list");
+    if (!container) return;
+
+    const players = this.game.auth.getPlayerList();
+    container.innerHTML = "";
+
+    if (players.length === 0) {
+      container.innerHTML = `<div class="auth-no-players">No registered players yet. Please register first!</div>`;
+      return;
+    }
+
+    players.forEach(player => {
+      const card = document.createElement("div");
+      card.className = "auth-player-card";
+      card.innerHTML = `
+        <span class="auth-player-avatar">${player.avatar || "🐭"}</span>
+        <div class="auth-player-info">
+          <div class="auth-player-name">${player.name}</div>
+          <div class="auth-player-stats">Score: <span>${(player.totalScore || 0).toLocaleString()}</span> · Stars: <span>${player.totalStars || 0}</span></div>
+        </div>
+      `;
+      card.addEventListener("click", () => {
+        this.game.sound.ensureContext();
+        const result = this.game.auth.loginDirect(player.name);
+        if (result) {
+          this.game.sound.playButtonClick();
+          const statusEl = document.getElementById("auth-login-status");
+          if (statusEl) {
+            statusEl.textContent = `Welcome back, ${player.name}! 🪔`;
+            statusEl.className = "auth-status success";
+            statusEl.classList.remove("hidden");
+          }
+          setTimeout(() => {
+            this.game.onAuthComplete();
+          }, 500);
+        }
+      });
+      container.appendChild(card);
+    });
+  }
+
+  updatePlayerHeader() {
+    const bar = document.getElementById("player-header-bar");
+    const avatarEl = document.getElementById("player-header-avatar");
+    const nameEl = document.getElementById("player-header-name");
+    const rankEl = document.getElementById("player-header-rank");
+
+    if (!bar) return;
+
+    if (this.game.auth.hasSession()) {
+      const player = this.game.auth.getCurrentPlayer();
+      if (avatarEl) avatarEl.textContent = player.avatar || "🐭";
+      if (nameEl) nameEl.textContent = player.name;
+      
+      // Get rank from leaderboard
+      const rank = this.game.storage.getPlayerRank(player.name);
+      if (rankEl) {
+        rankEl.textContent = rank > 0 ? `Rank #${rank}` : "Welcome!";
+      }
+      bar.classList.remove("hidden");
+    } else {
+      bar.classList.add("hidden");
+    }
+  }
+
+  // ==========================================
+  // GAME OVER MODAL
+  // ==========================================
+
+  showGameOverModal(data) {
+    const modal = this.modals.gameOver;
+    if (!modal) return;
+
+    // Score display
+    const scoreEl = document.getElementById("game-over-score");
+    if (scoreEl) {
+      scoreEl.innerHTML = `Score: <span>${(data.score || 0).toLocaleString()}</span>`;
+    }
+
+    // Stats
+    const statsEl = document.getElementById("game-over-stats");
+    if (statsEl) {
+      statsEl.innerHTML = "";
+      const stats = [
+        { label: "Modaks Gathered", value: data.modaksCollected || 0 },
+        { label: "Max Combo", value: `x${data.maxCombo || 0}` },
+        { label: "Time Survived", value: `${data.timeElapsed || 0}s` }
+      ];
+      stats.forEach(st => {
+        const row = document.createElement("div");
+        row.className = "stat-row";
+        row.innerHTML = `<span class="stat-label">${st.label}</span><span class="stat-value">${st.value}</span>`;
+        statsEl.appendChild(row);
+      });
+    }
+
+    // Random tip
+    const tips = [
+      "Jump over obstacles or activate Prasad Surge to purify them!",
+      "Collect modaks rapidly to fill the Prasad Meter and become invincible!",
+      "During Prasad Surge, obstacles are destroyed and give +300 bonus points!",
+      "Time your jumps carefully — obstacles have different sizes!",
+      "Keep your combo going! Higher combos mean bigger point multipliers!",
+      "Special golden modaks give 250 base points and fill the meter faster!"
+    ];
+    const tipEl = document.getElementById("game-over-tip-text");
+    if (tipEl) {
+      tipEl.textContent = tips[Math.floor(Math.random() * tips.length)];
+    }
+
+    this.showModal("gameOver");
+  }
+
+  // ==========================================
+  // LEVEL COMPLETE
+  // ==========================================
 
   showLevelCompleteModal(data) {
     const modal = this.modals.levelComplete;
@@ -244,10 +446,17 @@ class UIManager {
     const nameInput = document.getElementById("input-player-name");
     const saveStatus = document.getElementById("save-score-status");
 
+    // Pre-fill with current player name
+    if (nameInput && this.game.auth.hasSession()) {
+      nameInput.value = this.game.auth.getPlayerName();
+    }
+
     if (saveBtn && nameInput) {
+      saveBtn.disabled = false;
       saveBtn.onclick = () => {
-        const playerName = nameInput.value.trim() || "DEVOTEE";
-        this.game.storage.addLeaderboardEntry(playerName, save.totalScore, save.totalStars, save.bestOverallCombo);
+        const playerName = nameInput.value.trim() || this.game.auth.getPlayerName() || "DEVOTEE";
+        const avatar = this.game.auth.hasSession() ? this.game.auth.getPlayerAvatar() : "🐭";
+        this.game.storage.addLeaderboardEntry(playerName, save.totalScore, save.totalStars, save.bestOverallCombo, avatar);
         this.game.sound.playButtonClick();
         if (saveStatus) {
           saveStatus.textContent = "Saved to Leaderboard!";
@@ -265,12 +474,16 @@ class UIManager {
     const tableBody = document.getElementById("leaderboard-rows");
     if (!tableBody) return;
 
+    const currentPlayerName = this.game.auth.hasSession() ? this.game.auth.getPlayerName() : null;
+
     tableBody.innerHTML = "";
     list.forEach((entry, idx) => {
+      const isCurrentPlayer = currentPlayerName && entry.name === currentPlayerName;
       const row = document.createElement("tr");
-      row.className = `lb-row ${idx === 0 ? "lb-gold" : idx === 1 ? "lb-silver" : idx === 2 ? "lb-bronze" : ""}`;
+      row.className = `lb-row ${idx === 0 ? "lb-gold" : idx === 1 ? "lb-silver" : idx === 2 ? "lb-bronze" : ""} ${isCurrentPlayer ? "lb-current-player" : ""}`;
       row.innerHTML = `
         <td><span class="rank-badge">#${idx + 1}</span></td>
+        <td class="lb-avatar">${entry.avatar || "🐭"}</td>
         <td class="player-name">${entry.name}</td>
         <td class="player-score">${entry.score.toLocaleString()}</td>
         <td>${entry.stars} ⭐</td>
@@ -279,6 +492,38 @@ class UIManager {
       `;
       tableBody.appendChild(row);
     });
+
+    // Update rank summary card
+    this._updateLeaderboardSummary(list, currentPlayerName);
+  }
+
+  _updateLeaderboardSummary(list, currentPlayerName) {
+    const summaryCard = document.getElementById("lb-rank-summary");
+    if (!summaryCard) return;
+
+    if (!currentPlayerName) {
+      summaryCard.classList.add("hidden");
+      return;
+    }
+
+    const playerIdx = list.findIndex(e => e.name === currentPlayerName);
+    if (playerIdx < 0) {
+      summaryCard.classList.add("hidden");
+      return;
+    }
+
+    const entry = list[playerIdx];
+    summaryCard.classList.remove("hidden");
+
+    const avatarEl = document.getElementById("lb-summary-avatar");
+    const nameEl = document.getElementById("lb-summary-name");
+    const positionEl = document.getElementById("lb-summary-position");
+    const scoreEl = document.getElementById("lb-summary-score");
+
+    if (avatarEl) avatarEl.textContent = entry.avatar || "🐭";
+    if (nameEl) nameEl.textContent = entry.name;
+    if (positionEl) positionEl.textContent = `Rank #${playerIdx + 1} of ${list.length}`;
+    if (scoreEl) scoreEl.textContent = entry.score.toLocaleString();
   }
 
   _setupEventListeners() {
@@ -442,6 +687,19 @@ class UIManager {
       this.game.openFestivalMap();
     });
 
+    // Game Over Modal Controls
+    document.getElementById("btn-game-over-retry")?.addEventListener("click", () => {
+      this.game.sound.playButtonClick();
+      this.hideModal("gameOver");
+      this.game.restartCurrentLevel();
+    });
+
+    document.getElementById("btn-game-over-map")?.addEventListener("click", () => {
+      this.game.sound.playButtonClick();
+      this.hideModal("gameOver");
+      this.game.openFestivalMap();
+    });
+
     // Settings Controls
     const soundToggle = document.getElementById("toggle-sound");
     const musicToggle = document.getElementById("toggle-music");
@@ -482,6 +740,13 @@ class UIManager {
     document.getElementById("global-music-bar")?.addEventListener("click", () => {
       this.game.sound.playButtonClick();
       this.showScreen("settings");
+    });
+
+    // Player Header Bar Click -> Show Leaderboard
+    document.getElementById("player-header-bar")?.addEventListener("click", () => {
+      this.game.sound.playButtonClick();
+      this.renderLeaderboard();
+      this.showScreen("leaderboard");
     });
 
     document.getElementById("btn-reset-data")?.addEventListener("click", () => {
@@ -614,8 +879,10 @@ class UIManager {
     }
 
     if (nameInput) {
+      // Pre-fill with auth player name if available
+      const authName = this.game.auth.hasSession() ? this.game.auth.getPlayerName() : "";
       const existingName = document.getElementById("input-player-name")?.value.trim();
-      nameInput.value = existingName || "DEVOTEE";
+      nameInput.value = existingName || authName || "DEVOTEE";
       nameInput.oninput = () => this.renderGreetingCard();
     }
 

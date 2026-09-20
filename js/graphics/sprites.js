@@ -1222,6 +1222,96 @@ class SpriteRenderer {
       ctx.beginPath();
       ctx.arc(0, 2, 12, Math.PI, 0);
       ctx.fill();
+    } else if (type === "fire_cracker") {
+      // Red firecracker with sparking fuse
+      ctx.fillStyle = "#D62828";
+      ctx.beginPath();
+      ctx.roundRect(-8, -24, 16, 30, 4);
+      ctx.fill();
+      ctx.strokeStyle = "#FFD166";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Golden bands
+      ctx.fillStyle = "#FFD166";
+      ctx.fillRect(-9, -18, 18, 4);
+      ctx.fillRect(-9, -8, 18, 4);
+
+      // Sparking fuse
+      ctx.strokeStyle = "#8B6914";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -24);
+      ctx.quadraticCurveTo(6, -32, 2, -36);
+      ctx.stroke();
+
+      // Animated spark
+      const sparkPhase = this.animTime * 8;
+      ctx.fillStyle = `rgba(255, 215, 0, ${0.6 + Math.sin(sparkPhase) * 0.4})`;
+      ctx.beginPath();
+      ctx.arc(2, -36, 4 + Math.sin(sparkPhase) * 2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#FFF";
+      ctx.beginPath();
+      ctx.arc(2, -36, 2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (type === "water_splash") {
+      // Wider danger water splash puddle
+      ctx.fillStyle = "rgba(0, 119, 182, 0.55)";
+      ctx.beginPath();
+      ctx.ellipse(0, 2, 34, 12, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Inner ripple
+      ctx.strokeStyle = "rgba(144, 224, 239, 0.6)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(0, 2, 22, 7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Splash droplets
+      ctx.fillStyle = "rgba(144, 224, 239, 0.7)";
+      const splashPhase = this.animTime * 5;
+      for (let d = 0; d < 3; d++) {
+        const dropX = Math.sin(splashPhase + d * 2.1) * 14;
+        const dropY = -6 - Math.abs(Math.sin(splashPhase + d * 1.7)) * 8;
+        ctx.beginPath();
+        ctx.arc(dropX, dropY, 2.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (type === "barricade") {
+      // Wooden barricade with danger stripes
+      ctx.fillStyle = "#5C3A1E";
+      ctx.fillRect(-20, -32, 40, 36);
+      ctx.strokeStyle = "#3D2410";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-20, -32, 40, 36);
+
+      // Red and yellow danger stripes
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(-20, -32, 40, 36);
+      ctx.clip();
+      for (let s = -3; s < 5; s++) {
+        ctx.fillStyle = s % 2 === 0 ? "#D62828" : "#FFD166";
+        ctx.beginPath();
+        ctx.moveTo(-20 + s * 14, -32);
+        ctx.lineTo(-20 + s * 14 + 10, -32);
+        ctx.lineTo(-20 + s * 14 - 16, 4);
+        ctx.lineTo(-20 + s * 14 - 26, 4);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // Nails
+      ctx.fillStyle = "#888";
+      ctx.beginPath();
+      ctx.arc(-14, -26, 2, 0, Math.PI * 2);
+      ctx.arc(14, -26, 2, 0, Math.PI * 2);
+      ctx.arc(-14, -2, 2, 0, Math.PI * 2);
+      ctx.arc(14, -2, 2, 0, Math.PI * 2);
+      ctx.fill();
     }
 
     ctx.restore();

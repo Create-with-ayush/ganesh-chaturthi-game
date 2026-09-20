@@ -19,6 +19,7 @@
   <link rel="stylesheet" href="css/main.css" />
   <link rel="stylesheet" href="css/menu.css" />
   <link rel="stylesheet" href="css/game.css" />
+  <link rel="stylesheet" href="css/auth.css" />
   <link rel="stylesheet" href="css/responsive.css" />
 </head>
 <body>
@@ -36,8 +37,75 @@
         <span id="global-music-text" class="global-music-text">🪔 Bappa's Aarti</span>
       </div>
 
+      <!-- Player Header Bar (shown when logged in) -->
+      <div id="player-header-bar" class="player-header-bar hidden">
+        <span id="player-header-avatar" class="player-header-avatar">🐭</span>
+        <div>
+          <div id="player-header-name" class="player-header-name">DEVOTEE</div>
+          <div id="player-header-rank" class="player-header-rank">Welcome!</div>
+        </div>
+      </div>
+
+      <!-- 0. AUTH / LOGIN SCREEN -->
+      <section id="screen-auth" class="screen">
+        <div class="auth-container">
+          <div class="festival-badge">
+            <span>🪔</span>
+            <span>GANESH CHATURTHI CONTEST SPECIAL</span>
+            <span>🪔</span>
+          </div>
+          <header class="auth-logo game-logo">
+            <h1 class="logo-title-main">MUSHAK</h1>
+            <h2 class="logo-title-sub">BAPPA'S FESTIVAL QUEST</h2>
+          </header>
+          <p class="auth-welcome-text">Join the divine celebration! Register your name to begin your festive journey and compete on the leaderboard.</p>
+
+          <!-- Tab Switcher -->
+          <div class="auth-tabs">
+            <button id="auth-tab-register" class="auth-tab active">REGISTER</button>
+            <button id="auth-tab-login" class="auth-tab">LOGIN</button>
+          </div>
+
+          <!-- Register Form -->
+          <div id="auth-register-panel" class="auth-form-card glass-card">
+            <form class="auth-form" onsubmit="return false;">
+              <div class="auth-form-group">
+                <label class="auth-label">Devotee Name</label>
+                <input type="text" id="auth-register-name" class="auth-input" placeholder="Enter your name" maxlength="12" autocomplete="off" />
+              </div>
+              <div class="auth-form-group">
+                <label class="auth-label avatar-picker-label">
+                  <span>Choose Your Avatar</span>
+                  <span id="selected-avatar-preview" class="avatar-picker-selected">🐭</span>
+                </label>
+                <div id="avatar-picker-grid" class="avatar-picker-grid">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <div id="auth-register-status" class="auth-status hidden"></div>
+              <button id="btn-auth-register" class="btn btn-gold btn-pulse" type="button">
+                🙏 JOIN FESTIVAL
+              </button>
+            </form>
+          </div>
+
+          <!-- Login Form -->
+          <div id="auth-login-panel" class="auth-form-card glass-card hidden">
+            <div class="auth-form">
+              <div class="auth-form-group">
+                <label class="auth-label">Select Your Profile</label>
+                <div id="auth-players-list" class="auth-players-list">
+                  <!-- Populated by JS -->
+                </div>
+              </div>
+              <div id="auth-login-status" class="auth-status hidden"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- 1. MAIN MENU SCREEN -->
-      <section id="screen-menu" class="screen">
+      <section id="screen-menu" class="screen hidden">
         <div class="menu-container glass-card" style="padding: 36px 42px;">
           <div class="festival-badge">
             <span>🪔</span>
@@ -259,6 +327,27 @@
         </div>
       </div>
 
+      <!-- 5b. GAME OVER MODAL (Level 1 Obstacle Hit) -->
+      <div id="modal-game-over" class="modal-overlay hidden game-over-overlay">
+        <div class="modal-content glass-card game-over-card">
+          <h2 class="game-over-title">💥 GAME OVER</h2>
+          <p class="game-over-subtitle">Mushak crashed into an obstacle!</p>
+          <div id="game-over-score" class="game-over-score">Score: <span>0</span></div>
+          <div id="game-over-stats" class="lc-stats-list" style="text-align: left;"></div>
+          <div class="game-over-tip">
+            <strong>💡 TIP:</strong> <span id="game-over-tip-text">Jump over obstacles or activate Prasad Surge to purify them!</span>
+          </div>
+          <div class="game-over-actions">
+            <button id="btn-game-over-retry" class="btn btn-primary btn-pulse">
+              🔄 TRY AGAIN
+            </button>
+            <button id="btn-game-over-map" class="btn btn-secondary">
+              🗺️ FESTIVAL MAP
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- 6. LEVEL COMPLETE MODAL -->
       <div id="modal-level-complete" class="modal-overlay hidden">
         <div class="modal-content glass-card lc-modal-card">
@@ -389,17 +478,28 @@
 
       <!-- 9. LEADERBOARD MODAL SCREEN -->
       <section id="screen-leaderboard" class="screen hidden">
-        <div class="modal-content glass-card">
+        <div class="modal-content glass-card" style="max-width: 760px;">
           <header class="modal-header">
             <h2 class="modal-title">🏆 FESTIVAL LEADERBOARD</h2>
-            <p style="color: var(--color-muted);">Top devotees and festive scores recorded locally</p>
+            <p style="color: var(--color-muted);">All devotees ranked — compete for the top spot!</p>
           </header>
 
-          <div class="leaderboard-table-container">
+          <!-- Your Rank Summary Card -->
+          <div id="lb-rank-summary" class="lb-rank-summary hidden">
+            <span id="lb-summary-avatar" class="lb-rank-summary-avatar">🐭</span>
+            <div class="lb-rank-summary-info">
+              <div id="lb-summary-name" class="lb-rank-summary-name">DEVOTEE</div>
+              <div id="lb-summary-position" class="lb-rank-summary-position">Rank #1</div>
+            </div>
+            <div id="lb-summary-score" class="lb-rank-summary-score">0</div>
+          </div>
+
+          <div class="leaderboard-table-container" style="max-height: 320px;">
             <table class="leaderboard-table">
               <thead>
                 <tr>
                   <th>RANK</th>
+                  <th></th>
                   <th>DEVOTEE</th>
                   <th>SCORE</th>
                   <th>STARS</th>
@@ -430,7 +530,7 @@
               <div class="tutorial-desc">
                 <strong>Desktop:</strong> Arrow Keys / WASD to move, Space to Jump.<br />
                 <strong>Mobile:</strong> Use on-screen Left/Right and Jump buttons.<br />
-                Collect Golden Modaks (+100) and Special Modaks (+250). Chain modaks for up to x5 Combos! Avoid harmless puddles and boxes.
+                Collect Golden Modaks (+100) and Special Modaks (+250). Chain modaks for up to x5 Combos! <strong style="color: var(--color-festival-red);">⚠️ Hitting any obstacle = Game Over!</strong> Fill the Prasad Meter to activate Surge mode and purify obstacles!
               </div>
             </div>
 
@@ -554,6 +654,7 @@
 
   <!-- Game Scripts in Dependency Order -->
   <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/audio/soundManager.js"></script>
   <script src="js/storage/storageManager.js"></script>
   <script src="js/graphics/particles.js"></script>

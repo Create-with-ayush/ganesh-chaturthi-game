@@ -115,12 +115,12 @@ const CONFIG = {
   ],
 
   DEFAULT_LEADERBOARD: [
-    { name: "AARAV", score: 10850, stars: 15, combo: 24, rank: "FESTIVAL LEGEND", date: "2026-09-08" },
-    { name: "RAHUL", score: 10120, stars: 14, combo: 21, rank: "FESTIVAL LEGEND", date: "2026-09-09" },
-    { name: "AYUSH", score: 9870,  stars: 13, combo: 19, rank: "FESTIVAL LEGEND", date: "2026-09-10" },
-    { name: "PRIYA", score: 8650,  stars: 12, combo: 16, rank: "BAPPA'S CHAMPION", date: "2026-09-10" },
-    { name: "TANVI", score: 7820,  stars: 11, combo: 14, rank: "BAPPA'S CHAMPION", date: "2026-09-11" },
-    { name: "ROHAN", score: 6540,  stars: 9,  combo: 11, rank: "FESTIVAL HERO", date: "2026-09-11" }
+    { name: "AARAV", avatar: "🙏", score: 10850, stars: 15, combo: 24, rank: "FESTIVAL LEGEND", date: "2026-09-08" },
+    { name: "RAHUL", avatar: "🦚", score: 10120, stars: 14, combo: 21, rank: "FESTIVAL LEGEND", date: "2026-09-09" },
+    { name: "AYUSH", avatar: "🐘", score: 9870,  stars: 13, combo: 19, rank: "FESTIVAL LEGEND", date: "2026-09-10" },
+    { name: "PRIYA", avatar: "🌸", score: 8650,  stars: 12, combo: 16, rank: "BAPPA'S CHAMPION", date: "2026-09-10" },
+    { name: "TANVI", avatar: "🌺", score: 7820,  stars: 11, combo: 14, rank: "BAPPA'S CHAMPION", date: "2026-09-11" },
+    { name: "ROHAN", avatar: "🥁", score: 6540,  stars: 9,  combo: 11, rank: "FESTIVAL HERO", date: "2026-09-11" }
   ],
 
   WARDROBE: [
